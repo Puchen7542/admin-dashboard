@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运营概览 · 后台管理仪表盘</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --bg:#070a10;
+    --bg-2:#0b1018;
+    --panel:#101724;
+    --panel-hi:#141d2c;
+    --line:#1e2939;
+    --line-soft:#18212f;
+    --txt:#e9eff8;
+    --txt-2:#98a7bd;
+    --txt-3:#657490;
+    --blue:#5b8cff;
+    --cyan:#2dd4bf;
+    --green:#34d399;
+    --red:#fb7185;
+    --amber:#fbbf24;
+    --violet:#a78bfa;
+    --radius:16px;
+    --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 18px 40px -24px rgba(0,0,0,.9);
+  }
+
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    background-image:
+      radial-gradient(820px 420px at 8% -8%, rgba(91,140,255,.13), transparent 62%),
+      radial-gradient(760px 420px at 96% 4%, rgba(45,212,191,.09), transparent 60%),
+      radial-gradient(900px 600px at 60% 110%, rgba(167,139,250,.07), transparent 65%);
+    background-attachment:fixed;
+  }
+
+  ::selection{background:rgba(91,140,255,.32)}
+
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+  /* ================= 布局 ================= */
+  .shell{display:grid;grid-template-columns:246px minmax(0,1fr);min-height:100vh}
+
+  /* ================= 侧边栏 ================= */
+  .sidebar{
+    border-right:1px solid var(--line-soft);
+    background:linear-gradient(180deg,rgba(16,23,36,.92),rgba(9,13,20,.96));
+    backdrop-filter:blur(14px);
+    display:flex;flex-direction:column;
+    padding:20px 14px 16px;
+    position:sticky;top:0;height:100vh;
+    z-index:60;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:0 8px 22px}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;flex:none;
+    background:conic-gradient(from 210deg,#5b8cff,#2dd4bf 45%,#a78bfa 80%,#5b8cff);
+    display:grid;place-items:center;
+    box-shadow:0 0 0 1px rgba(255,255,255,.12) inset, 0 8px 20px -8px rgba(91,140,255,.9);
+  }
+  .brand-mark svg{width:18px;height:18px}
+  .brand-txt strong{display:block;font-size:14.5px;letter-spacing:.2px;font-weight:650}
+  .brand-txt span{display:block;font-size:11px;color:var(--txt-3);letter-spacing:.6px;text-transform:uppercase}
+
+  .nav-label{font-size:10.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--txt-3);padding:14px 10px 7px;font-weight:600}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav a{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 11px;border-radius:10px;
+    color:var(--txt-2);text-decoration:none;font-size:13.5px;
+    transition:background .16s,color .16s;
+    position:relative;
+  }
+  .nav a svg{width:17px;height:17px;opacity:.85;flex:none}
+  .nav a:hover{background:rgba(255,255,255,.045);color:var(--txt)}
+  .nav a.active{background:linear-gradient(90deg,rgba(91,140,255,.20),rgba(91,140,255,.05));color:#dbe7ff}
+  .nav a.active::before{
+    content:"";position:absolute;left:0;top:8px;bottom:8px;width:2.5px;
+    border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--cyan));
+  }
+  .nav a.active svg{opacity:1;color:#8fb2ff}
+  .nav .pill{margin-left:auto;font-size:10.5px;padding:1px 6px;border-radius:999px;background:rgba(91,140,255,.16);color:#9dbcff;font-weight:600}
+
+  .sidebar-foot{margin-top:auto;padding-top:14px}
+  .user-chip{
+    display:flex;align-items:center;gap:10px;padding:9px;border-radius:12px;
+    border:1px solid var(--line-soft);background:rgba(255,255,255,.02);
+  }
+  .avatar{
+    width:29px;height:29px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:11.5px;font-weight:700;color:#0a1018;
+    background:linear-gradient(140deg,#7dd3fc,#5b8cff);
+  }
+  .user-chip b{display:block;font-size:12.5px;font-weight:600}
+  .user-chip i{display:block;font-size:10.5px;color:var(--txt-3);font-style:normal}
+
+  /* ================= 主区 ================= */
+  .main{padding:22px 26px 34px;min-width:0}
+
+  .topbar{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+    flex-wrap:wrap;margin-bottom:22px;
+  }
+  .topbar h1{font-size:22px;font-weight:660;letter-spacing:-.2px;line-height:1.25}
+  .topbar p{color:var(--txt-3);font-size:12.5px;margin-top:5px}
+  .topbar p b{color:var(--txt-2);font-weight:500}
+
+  .top-actions{display:flex;align-items:center;gap:9px}
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    height:34px;padding:0 13px;border-radius:9px;
+    font-size:12.5px;font-weight:550;font-family:inherit;
+    color:var(--txt-2);cursor:pointer;
+    background:rgba(255,255,255,.035);
+    border:1px solid var(--line);
+    transition:.16s;
+    white-space:nowrap;
+  }
+  .btn:hover{color:var(--txt);background:rgba(255,255,255,.07);border-color:#2b3a4f}
+  .btn svg{width:14px;height:14px}
+  .btn.primary{
+    color:#06101f;border-color:transparent;
+    background:linear-gradient(150deg,#8fd6ff,#5b8cff);
+    box-shadow:0 10px 24px -12px rgba(91,140,255,.95);
+  }
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(.5px)}
+
+  .segment{display:inline-flex;padding:3px;gap:2px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--line-soft)}
+  .segment button{
+    font-family:inherit;font-size:12px;color:var(--txt-3);background:none;border:0;
+    padding:5px 11px;border-radius:6px;cursor:pointer;transition:.15s;font-weight:550;
+  }
+  .segment button:hover{color:var(--txt-2)}
+  .segment button[aria-pressed="true"]{background:rgba(91,140,255,.18);color:#c3d7ff;box-shadow:0 0 0 1px rgba(91,140,255,.25) inset}
+
+  /* ================= KPI ================= */
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
+
+  .kpi{
+    position:relative;overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 16px 12px;
+    background:linear-gradient(165deg,var(--panel-hi),var(--panel) 58%);
+    box-shadow:var(--shadow);
+    transition:transform .22s cubic-bezier(.4,0,.2,1),border-color .22s;
+    animation:rise .5s cubic-bezier(.22,1,.36,1) backwards;
+  }
+  .kpi:nth-child(1){animation-delay:.02s}
+  .kpi:nth-child(2){animation-delay:.07s}
+  .kpi:nth-child(3){animation-delay:.12s}
+  .kpi:nth-child(4){animation-delay:.17s}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .kpi:hover{transform:translateY(-2px);border-color:#2a3a52}
+  .kpi::before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,var(--tint,rgba(255,255,255,.4)),transparent);opacity:.55}
+  .kpi::after{
+    content:"";position:absolute;right:-40px;top:-60px;width:150px;height:150px;border-radius:50%;
+    background:var(--glow,transparent);filter:blur(34px);opacity:.5;pointer-events:none;
+  }
+
+  .kpi-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+  .kpi-ico{
+    width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;
+    background:var(--ico-bg,rgba(255,255,255,.06));
+    color:var(--ico-c,#fff);
+  }
+  .kpi-ico svg{width:14px;height:14px}
+  .kpi-label{font-size:12.2px;color:var(--txt-2);letter-spacing:.15px}
+
+  .kpi-value{font-size:26px;font-weight:660;letter-spacing:-.7px;line-height:1.15;display:flex;align-items:baseline;gap:3px}
+  .kpi-value .unit{font-size:15px;font-weight:600;color:var(--txt-2);letter-spacing:0}
+
+  .kpi-foot{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap;padding-right:74px}
+  .trend{
+    display:inline-flex;align-items:center;gap:3px;
+    font-size:11.5px;font-weight:650;padding:2.5px 7px 2.5px 5px;border-radius:999px;
+    letter-spacing:.1px;
+  }
+  .trend svg{width:11px;height:11px}
+  .trend.up{color:#5eead4;background:rgba(45,212,191,.13);box-shadow:0 0 0 1px rgba(45,212,191,.2) inset}
+  .trend.down{color:#fda4af;background:rgba(251,113,133,.13);box-shadow:0 0 0 1px rgba(251,113,133,.2) inset}
+  .kpi-foot em{font-style:normal;font-size:11.5px;color:var(--txt-3)}
+
+  .spark{position:absolute;right:14px;bottom:13px;width:70px;height:26px;opacity:.92;pointer-events:none}
+
+  /* ================= 图表区 ================= */
+  .charts{display:grid;grid-template-columns:minmax(0,1.62fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+
+  .panel{
+    display:flex;flex-direction:column;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(170deg,rgba(20,29,44,.85),rgba(14,20,31,.92));
+    box-shadow:var(--shadow);
+    padding:16px 16px 14px;
+    min-width:0;
+    animation:rise .55s cubic-bezier(.22,1,.36,1) backwards;
+    animation-delay:.2s;
+  }
+  .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  .panel-title{font-size:14px;font-weight:620;letter-spacing:-.1px}
+  .panel-sub{font-size:11.5px;color:var(--txt-3);margin-top:3px}
+
+  .legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--txt-2)}
+  .legend i{width:9px;height:9px;border-radius:3px;display:block}
+  .legend .dash{width:14px;height:0;border-top:2px dashed #64748b;border-radius:0}
+
+  .chart-wrap{position:relative;margin-top:auto;padding-top:10px}
+  .chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}
+
+  .tip{
+    position:absolute;pointer-events:none;z-index:5;
+    transform:translate(-50%,-124%);
+    background:rgba(10,15,23,.96);
+    border:1px solid #2a3a52;
+    border-radius:10px;padding:8px 10px;
+    box-shadow:0 18px 34px -16px #000;
+    backdrop-filter:blur(8px);
+    opacity:0;transition:opacity .13s;
+    white-space:nowrap;
+  }
+  .tip.on{opacity:1}
+  .tip .t-d{font-size:10.5px;color:var(--txt-3);margin-bottom:5px;letter-spacing:.2px}
+  .tip .t-r{display:flex;align-items:center;gap:7px;font-size:12px}
+  .tip .t-r + .t-r{margin-top:3px}
+  .tip .t-r i{width:7px;height:7px;border-radius:2px;flex:none}
+  .tip .t-r b{margin-left:auto;font-weight:650;font-variant-numeric:tabular-nums}
+  .tip .t-r span{color:var(--txt-2)}
+
+  /* ================= 环形图 ================= */
+  .donut-body{display:flex;align-items:center;gap:14px;flex:1;margin:6px auto 0;min-width:0;width:100%;max-width:452px}
+  .donut-box{flex:0 1 184px;display:flex;justify-content:center;align-items:center;min-width:0}
+  .donut-wrap{position:relative;width:184px;max-width:100%}
+  .donut-wrap svg{display:block;width:100%;height:auto}
+  .donut-center{
+    position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none;
+  }
+  .donut-center b{font-size:22px;font-weight:660;letter-spacing:-.5px;display:block;line-height:1.2}
+  .donut-center span{font-size:10.8px;color:var(--txt-3);display:block;margin-top:3px;letter-spacing:.3px}
+  .seg-path{transition:opacity .18s,stroke-width .18s;cursor:pointer}
+  .donut-wrap.dim .seg-path{opacity:.32}
+  .donut-wrap.dim .seg-path.on{opacity:1}
+
+  .cat-list{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+  .cat{
+    display:flex;align-items:center;gap:7px;font-size:11.8px;
+    padding:6px 7px;border-radius:8px;transition:background .15s;cursor:default;
+    min-width:0;
+  }
+  .cat:hover,.cat.on{background:rgba(255,255,255,.05)}
+  .cat i{width:8px;height:8px;border-radius:2.5px;flex:none}
+  .cat .n{color:var(--txt-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cat .v{margin-left:auto;font-weight:650;font-variant-numeric:tabular-nums;font-size:11.6px;color:var(--txt)}
+  .cat .v small{color:var(--txt-3);font-weight:500;font-size:10.4px;margin-left:2px}
+
+  /* ================= 表格 ================= */
+  .table-panel{animation-delay:.26s;padding-bottom:8px}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 12px}
+  .field{
+    display:flex;align-items:center;gap:8px;
+    height:34px;padding:0 11px;border-radius:9px;
+    background:rgba(255,255,255,.03);border:1px solid var(--line);
+    transition:border-color .16s,background .16s;
+    flex:1 1 220px;max-width:290px;min-width:0;
+  }
+  .field:focus-within{border-color:#3b5a86;background:rgba(91,140,255,.07);box-shadow:0 0 0 3px rgba(91,140,255,.09)}
+  .field svg{width:14px;height:14px;color:var(--txt-3);flex:none}
+  .field input{
+    border:0;background:none;outline:none;color:var(--txt);
+    font-family:inherit;font-size:12.5px;width:100%;min-width:0;
+  }
+  .field input::placeholder{color:var(--txt-3)}
+  .field .clear{
+    border:0;background:none;color:var(--txt-3);cursor:pointer;font-size:15px;line-height:1;
+    padding:0 1px;display:none;font-family:inherit;
+  }
+  .field .clear:hover{color:var(--txt)}
+  .field.has-val .clear{display:block}
+
+  .count{margin-left:2px;font-size:11.8px;color:var(--txt-3);white-space:nowrap}
+  .count b{color:var(--txt);font-weight:600}
+
+  .table-scroll{overflow-x:auto;border:1px solid var(--line-soft);border-radius:11px;background:rgba(7,11,17,.35)}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;font-size:12.7px}
+
+  thead th{
+    position:sticky;top:0;z-index:2;
+    background:#0f1724;
+    text-align:left;font-weight:600;color:var(--txt-2);
+    font-size:11.2px;letter-spacing:.5px;text-transform:uppercase;
+    padding:10px 12px;white-space:nowrap;
+    border-bottom:1px solid var(--line);
+    user-select:none;
+  }
+  th[data-key]{cursor:pointer;transition:color .15s,background .15s}
+  th[data-key]:hover{color:var(--txt);background:#132033}
+  th .th-in{display:inline-flex;align-items:center;gap:5px}
+  th .arrow{width:9px;height:9px;opacity:0;transition:.15s;color:var(--blue)}
+  th:hover .arrow{opacity:.45}
+  th.sorted{color:#bcd2ff}
+  th.sorted .arrow{opacity:1}
+  th.sorted .arrow.flip{transform:rotate(180deg)}
+  th.ta-r{text-align:right}
+  th.ta-r .th-in{flex-direction:row-reverse}
+  th.ta-r .arrow{margin-right:-10px}
+
+  tbody td{
+    padding:10px 12px;border-bottom:1px solid rgba(30,41,57,.55);
+    color:var(--txt-2);white-space:nowrap;vertical-align:middle;
+  }
+  tbody tr{transition:background .13s}
+  tbody tr:hover td{background:rgba(91,140,255,.055);color:var(--txt)}
+  tbody tr:last-child td{border-bottom:0}
+  td .oid{color:#9dbcff;font-weight:550;font-variant-numeric:tabular-nums;letter-spacing:.15px}
+  td .cust{display:flex;align-items:center;gap:8px;color:var(--txt)}
+  .mini-av{
+    width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:9.5px;font-weight:700;color:#0b1220;
+    background:linear-gradient(140deg,#93c5fd,#5b8cff);
+  }
+  td .prod{color:var(--txt);max-width:200px;overflow:hidden;text-overflow:ellipsis;display:block}
+  td .cat-tag{font-size:11px;color:var(--txt-3);background:rgba(255,255,255,.045);padding:2px 7px;border-radius:5px}
+  td.amt{text-align:right;font-weight:620;color:var(--txt);font-variant-numeric:tabular-nums}
+  td .time{color:var(--txt-3);font-variant-numeric:tabular-nums;font-size:11.8px}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;
+    letter-spacing:.2px;
+  }
+  .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+  .s-done{color:#4ade80;background:rgba(52,211,153,.12)}
+  .s-proc{color:#8fb2ff;background:rgba(91,140,255,.14)}
+  .s-ship{color:#fbbf24;background:rgba(251,191,36,.12)}
+  .s-cancel{color:#fb7185;background:rgba(251,113,133,.12)}
+
+  .empty{padding:40px 12px;text-align:center;color:var(--txt-3);font-size:12.8px}
+  .empty svg{width:34px;height:34px;opacity:.35;margin-bottom:8px;display:inline-block}
+
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px 4px;flex-wrap:wrap}
+  .pager .info{font-size:11.8px;color:var(--txt-3)}
+  .pager .info b{color:var(--txt-2);font-weight:600}
+  .pages{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .pg{
+    min-width:29px;height:29px;padding:0 8px;border-radius:8px;
+    border:1px solid var(--line);background:rgba(255,255,255,.025);
+    color:var(--txt-2);font-family:inherit;font-size:12px;cursor:pointer;
+    display:inline-grid;place-items:center;transition:.15s;font-variant-numeric:tabular-nums;
+  }
+  .pg:hover:not(:disabled):not(.active){background:rgba(255,255,255,.07);color:var(--txt);border-color:#2b3a4f}
+  .pg:disabled{opacity:.32;cursor:not-allowed}
+  .pg.active{
+    background:linear-gradient(150deg,#8fd6ff,#5b8cff);color:#06101f;font-weight:700;
+    border-color:transparent;box-shadow:0 8px 18px -10px rgba(91,140,255,.9);
+  }
+  .pg.dots{border-color:transparent;background:none;cursor:default;color:var(--txt-3)}
+  .pg svg{width:13px;height:13px}
+
+  /* ================= 响应式 ================= */
+  .menu-btn{display:none}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(3,6,10,.66);backdrop-filter:blur(2px);z-index:55}
+  .scrim.on{display:block}
+
+  @media (max-width:1300px){
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:1040px){
+    .charts{grid-template-columns:minmax(0,1fr)}
+    .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:30px 0 60px -30px #000;width:246px}
+    .sidebar.open{transform:none}
+    .shell{grid-template-columns:minmax(0,1fr)}
+    .menu-btn{display:inline-grid}
+    .main{padding:16px 18px 30px}
+  }
+  @media (max-width:620px){
+    .main{padding:14px 13px 26px}
+    .kpis{grid-template-columns:minmax(0,1fr);gap:11px}
+    .kpi-value{font-size:24px}
+    .topbar h1{font-size:19px}
+    .topbar{margin-bottom:16px}
+    .top-actions{width:100%}
+    .top-actions .segment{flex:1;justify-content:space-between}
+    .top-actions .segment button{flex:1}
+    .donut-body{flex-direction:column;gap:6px;align-items:stretch}
+    .donut-box{flex:0 0 auto}
+    .donut-wrap{width:164px;margin:0 auto}
+    .cat-list{width:100%}
+    .pager{justify-content:center}
+    .count{width:100%;margin-left:0}
+    .toolbar{gap:8px}
+    .field{max-width:none;flex:1 1 100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============ 侧边栏 ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#08101d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17V9m5 8V5m5 12v-6m5 6V8"/>
+        </svg>
+      </div>
+      <div class="brand-txt">
+        <strong>Northwind</strong>
+        <span>Admin Console</span>
+      </div>
+    </div>
+
+    <div class="nav-label">主导航</div>
+    <nav class="nav">
+      <a href="#" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        概览
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/><path d="M9 12h7M9 16h5"/></svg>
+        订单管理
+        <span class="pill">28</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="M4 7l8 4 8-4M12 21V11"/></svg>
+        商品库存
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M17 5.5a3.4 3.4 0 0 1 0 6M18.5 20a6 6 0 0 0-2.6-4.9"/></svg>
+        用户中心
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M8 15v-4M12.5 15V8M17 15v-6"/></svg>
+        数据分析
+      </a>
+    </nav>
+
+    <div class="nav-label">系统</div>
+    <nav class="nav">
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .33 1.76l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-2.7 1.13V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.76.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.6 1.6 0 0 0 2.6 14H2.5a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7a1.6 1.6 0 0 0-.33-1.76l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.6 1.6 0 0 0 9 2.6V2.5a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.13l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.6 1.6 0 0 0 21.4 9h.1a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+        系统设置
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.6 8-9.6V5.4L12 2 4 5.4v7C4 18.4 12 22 12 22z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg>
+        权限审计
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar">沈</div>
+        <div>
+          <b>沈明轩</b>
+          <i>超级管理员</i>
+        </div>
+        <svg style="width:14px;height:14px;margin-left:auto;color:var(--txt-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ 主区 ============ -->
+  <main class="main">
+
+    <div class="topbar">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <button class="btn menu-btn" id="menuBtn" aria-label="打开菜单" style="width:34px;padding:0;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div>
+          <h1>运营概览</h1>
+          <p>数据截至 <b id="stamp">2026-10-22 16:37</b> · 统计周期 近 7 天</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="segment" role="group" aria-label="时间范围">
+          <button aria-pressed="true">近 7 天</button>
+          <button aria-pressed="false">近 30 天</button>
+          <button aria-pressed="false">本季度</button>
+        </div>
+        <button class="btn primary" id="refreshBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+          刷新
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <section class="kpis" id="kpis">
+      <article class="kpi" style="--tint:rgba(91,140,255,.55);--glow:rgba(91,140,255,.20)">
+        <div class="kpi-head">
+          <div class="kpi-ico" style="--ico-bg:rgba(91,140,255,.15);--ico-c:#8fb2ff">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M17 5.5a3.4 3.4 0 0 1 0 6M18.5 20a6 6 0 0 0-2.6-4.9"/></svg>
+          </div>
+          <span class="kpi-label">总用户数</span>
+        </div>
+        <div class="kpi-value num" data-target="128459" data-fmt="int">0</div>
+        <div class="kpi-foot">
+          <span class="trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+            12.4%
+          </span>
+          <em>环比上月</em>
+        </div>
+        <svg class="spark" viewBox="0 0 78 30" fill="none" preserveAspectRatio="none">
+          <defs><linearGradient id="sp1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b8cff" stop-opacity=".42"/><stop offset="1" stop-color="#5b8cff" stop-opacity="0"/></linearGradient></defs>
+          <path d="M1 24 L14 20 L27 22 L40 15 L53 17 L66 9 L77 4 L77 30 L1 30Z" fill="url(#sp1)"/>
+          <path d="M1 24 L14 20 L27 22 L40 15 L53 17 L66 9 L77 4" stroke="#7aa2ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </article>
+
+      <article class="kpi" style="--tint:rgba(45,212,191,.55);--glow:rgba(45,212,191,.18)">
+        <div class="kpi-head">
+          <div class="kpi-ico" style="--ico-bg:rgba(45,212,191,.14);--ico-c:#5eead4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.6 8.4a2 2 0 0 1-2 1.6H9.3a2 2 0 0 1-2-1.6L5.6 4.4A1 1 0 0 0 4.6 3.6H2"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+          </div>
+          <span class="kpi-label">今日订单</span>
+        </div>
+        <div class="kpi-value num" data-target="634" data-fmt="int">0</div>
+        <div class="kpi-foot">
+          <span class="trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+            8.2%
+          </span>
+          <em>环比昨日</em>
+        </div>
+        <svg class="spark" viewBox="0 0 78 30" fill="none" preserveAspectRatio="none">
+          <defs><linearGradient id="sp2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf" stop-opacity=".42"/><stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/></linearGradient></defs>
+          <path d="M1 21 L14 23 L27 16 L40 19 L53 11 L66 13 L77 5 L77 30 L1 30Z" fill="url(#sp2)"/>
+          <path d="M1 21 L14 23 L27 16 L40 19 L53 11 L66 13 L77 5" stroke="#4fe0c8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </article>
+
+      <article class="kpi" style="--tint:rgba(167,139,250,.55);--glow:rgba(167,139,250,.18)">
+        <div class="kpi-head">
+          <div class="kpi-ico" style="--ico-bg:rgba(167,139,250,.15);--ico-c:#c4b5fd">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16.5 7.2c-.8-1.3-2.5-2-4.5-2-2.4 0-4.2 1.2-4.2 3 0 2 2 2.7 4.4 3.3 2.6.7 4.6 1.5 4.6 3.6 0 2-2 3.4-4.8 3.4-2.2 0-4-.9-4.8-2.3"/></svg>
+          </div>
+          <span class="kpi-label">总收入</span>
+        </div>
+        <div class="kpi-value num"><span class="unit">¥</span><span data-target="1286940" data-fmt="int">0</span></div>
+        <div class="kpi-foot">
+          <span class="trend down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            3.1%
+          </span>
+          <em>环比上月</em>
+        </div>
+        <svg class="spark" viewBox="0 0 78 30" fill="none" preserveAspectRatio="none">
+          <defs><linearGradient id="sp3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a78bfa" stop-opacity=".40"/><stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></linearGradient></defs>
+          <path d="M1 12 L14 10 L27 15 L40 11 L53 17 L66 15 L77 21 L77 30 L1 30Z" fill="url(#sp3)"/>
+          <path d="M1 12 L14 10 L27 15 L40 11 L53 17 L66 15 L77 21" stroke="#b7a4fb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </article>
+
+      <article class="kpi" style="--tint:rgba(251,191,36,.55);--glow:rgba(251,191,36,.16)">
+        <div class="kpi-head">
+          <div class="kpi-ico" style="--ico-bg:rgba(251,191,36,.14);--ico-c:#fcd34d">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5.5-6 4 3.6L21 6"/><path d="M15 6h6v6"/></svg>
+          </div>
+          <span class="kpi-label">转化率</span>
+        </div>
+        <div class="kpi-value num"><span data-target="4.82" data-fmt="pct" data-dec="2">0.00</span><span class="unit">%</span></div>
+        <div class="kpi-foot">
+          <span class="trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+            +0.61pt
+          </span>
+          <em>环比上周</em>
+        </div>
+        <svg class="spark" viewBox="0 0 78 30" fill="none" preserveAspectRatio="none">
+          <defs><linearGradient id="sp4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbbf24" stop-opacity=".38"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></linearGradient></defs>
+          <path d="M1 23 L14 19 L27 21 L40 14 L53 16 L66 10 L77 7 L77 30 L1 30Z" fill="url(#sp4)"/>
+          <path d="M1 23 L14 19 L27 21 L40 14 L53 16 L66 10 L77 7" stroke="#f7c948" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </article>
+    </section>
+
+    <!-- 图表 -->
+    <section class="charts">
+      <!-- 折线图 -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">近 7 天订单趋势</div>
+            <div class="panel-sub">当日 00:00 – 24:00 有效订单数（不含取消）</div>
+          </div>
+          <div class="legend">
+            <span><i style="background:linear-gradient(140deg,#8fd6ff,#5b8cff)"></i>本期</span>
+            <span><i class="dash"></i>上周同期</span>
+          </div>
+        </div>
+        <div class="chart-wrap" id="lineWrap">
+          <svg id="lineChart" viewBox="0 0 780 292" role="img" aria-label="近7天订单趋势折线图"></svg>
+          <div class="tip" id="lineTip"></div>
+        </div>
+      </div>
+
+      <!-- 环形图 -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">订单分类占比</div>
+            <div class="panel-sub">近 7 天 · 共 3,608 单</div>
+          </div>
+        </div>
+        <div class="donut-body">
+          <div class="donut-box">
+            <div class="donut-wrap" id="donutWrap">
+              <svg id="donut" viewBox="0 0 220 220" role="img" aria-label="订单分类占比环形图"></svg>
+              <div class="donut-center">
+                <b class="num" id="donutVal">3,608</b>
+                <span id="donutLbl">近 7 天订单</span>
+              </div>
+            </div>
+          </div>
+          <div class="cat-list" id="catList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 表格 -->
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">最近订单</div>
+          <div class="panel-sub">支持按订单号 / 客户 / 商品搜索，点击表头排序</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <label class="field" id="field">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          <input type="text" id="search" placeholder="搜索订单号、客户或商品…" autocomplete="off" aria-label="搜索订单">
+          <button class="clear" id="clearBtn" aria-label="清空">×</button>
+        </label>
+        <div class="count" id="countBox"></div>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="id" class="sorted">订单号<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></th>
+              <th data-key="customer">客户<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></th>
+              <th>商品</th>
+              <th data-key="cat">分类<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></th>
+              <th data-key="amount" class="ta-r">金额<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></th>
+              <th data-key="status">状态<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></th>
+              <th data-key="ts" class="ta-r">下单时间<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <div class="info" id="pageInfo"></div>
+        <div class="pages" id="pages"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ========== 1. 数字滚动 ========== */
+  const fmtInt = n => Math.round(n).toLocaleString("en-US");
+  const fmtPct = (n, d) => n.toFixed(d);
+
+  function countUp(el){
+    const target = parseFloat(el.dataset.target);
+    const fmt = el.dataset.fmt;
+    const dec = parseInt(el.dataset.dec || "0", 10);
+    const dur = 950;
+    const t0 = performance.now();
+    const ease = t => 1 - Math.pow(1 - t, 3);
+    function step(now){
+      const p = Math.min(1, (now - t0) / dur);
+      const v = target * ease(p);
+      el.textContent = fmt === "pct" ? fmtPct(v, dec) : fmtInt(v);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = fmt === "pct" ? fmtPct(target, dec) : fmtInt(target);
+    }
+    requestAnimationFrame(step);
+  }
+  document.querySelectorAll("[data-target]").forEach(countUp);
+
+  /* ========== 2. 折线图 ========== */
+  const LINE = {
+    labels: ["10/16","10/17","10/18","10/19","10/20","10/21","10/22"],
+    cur:    [412, 468, 435, 521, 590, 548, 634],
+    prev:   [380, 402, 395, 430, 468, 442, 505]
+  };
+  const H = 300, PL = 44, PR = 14, PT = 22, PB = 40;
+  const plotH = H - PT - PB;
+  const Y_MIN = 300, Y_MAX = 700;
+  let lineFirst = true;
+
+  function smooth(pts){
+    let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++){
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+      const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return d;
+  }
+
+  function drawLine(){
+    const svg = document.getElementById("lineChart");
+    const wrap = document.getElementById("lineWrap");
+    const cw = Math.round(wrap.clientWidth) || 720;
+    const W = Math.max(320, Math.min(940, cw));
+    const plotW = W - PL - PR;
+    const step = plotW / (LINE.labels.length - 1);
+    const xAt = i => PL + step * i;
+    const yAt = v => PT + (1 - (v - Y_MIN) / (Y_MAX - Y_MIN)) * plotH;
+
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+    const curPts = LINE.cur.map((v, i) => ({ x: xAt(i), y: yAt(v) }));
+    const prevPts = LINE.prev.map((v, i) => ({ x: xAt(i), y: yAt(v) }));
+    const curD = smooth(curPts);
+    const prevD = smooth(prevPts);
+    const baseY = (PT + plotH).toFixed(2);
+    const areaD = `${curD} L ${xAt(LINE.cur.length - 1).toFixed(2)} ${baseY} L ${PL.toFixed(2)} ${baseY} Z`;
+
+    let grid = "";
+    [300, 400, 500, 600, 700].forEach(t => {
+      const y = yAt(t);
+      grid += `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="#1b2534" stroke-width="1" ${t === Y_MIN ? "" : 'stroke-dasharray="3 5"'} />`;
+      grid += `<text x="${PL - 10}" y="${y + 3.5}" text-anchor="end" fill="#5c6b80" font-size="10.5" font-family="inherit">${t}</text>`;
+    });
+
+    let xlabels = "";
+    LINE.labels.forEach((lb, i) => {
+      xlabels += `<text x="${xAt(i)}" y="${H - 14}" text-anchor="middle" fill="${i === LINE.labels.length - 1 ? "#9aa9bf" : "#5c6b80"}" font-size="10.8" font-family="inherit">${lb}</text>`;
+    });
+
+    let dots = "";
+    curPts.forEach((p, i) => {
+      const hot = i === curPts.length - 1;
+      if (hot) dots += `<circle cx="${p.x}" cy="${p.y}" r="9" fill="#5b8cff" opacity=".16"/>`;
+      dots += `<circle cx="${p.x}" cy="${p.y}" r="${hot ? 4.6 : 3.2}" fill="#0b1220" stroke="#7aa2ff" stroke-width="${hot ? 2.6 : 2}"/>`;
+    });
+
+    const animAttr = lineFirst
+      ? `pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"`
+      : "";
+    const animTag = lineFirst
+      ? `<animate attributeName="stroke-dashoffset" from="1" to="0" dur="1.15s" begin="0.12s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1" keyTimes="0;1"/>`
+      : "";
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5b8cff" stop-opacity=".34"/>
+          <stop offset="55%" stop-color="#5b8cff" stop-opacity=".09"/>
+          <stop offset="100%" stop-color="#5b8cff" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#4f7dff"/>
+          <stop offset="60%" stop-color="#7aa2ff"/>
+          <stop offset="100%" stop-color="#7ee7d6"/>
+        </linearGradient>
+      </defs>
+      ${grid}
+      <path d="${areaD}" fill="url(#areaGrad)"/>
+      <path d="${prevD}" fill="none" stroke="#5f708a" stroke-width="1.7" stroke-dasharray="5 5" stroke-linecap="round" opacity=".8"/>
+      <path d="${curD}" fill="none" stroke="url(#strokeGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" ${animAttr}>
+        ${animTag}
+      </path>
+      ${dots}
+      ${xlabels}
+      <line id="hoverLine" x1="0" y1="${PT}" x2="0" y2="${PT + plotH}" stroke="#3d5a85" stroke-width="1" stroke-dasharray="3 4" opacity="0"/>
+      <circle id="hoverDot" r="5.5" fill="#0b1220" stroke="#8fd6ff" stroke-width="2.4" opacity="0"/>
+      <rect id="hitArea" x="${PL}" y="${PT}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair"/>
+    `;
+
+    lineFirst = false;
+    bindHover(svg, wrap, W, curPts, step);
+  }
+
+  function bindHover(svg, wrap, W, curPts, step){
+    const tip = document.getElementById("lineTip");
+    const hl = svg.querySelector("#hoverLine");
+    const hd = svg.querySelector("#hoverDot");
+    const n = LINE.labels.length;
+
+    function move(e){
+      const r = svg.getBoundingClientRect();
+      const vx = (e.clientX - r.left) * (W / r.width);
+      let idx = Math.round((vx - PL) / step);
+      idx = Math.max(0, Math.min(n - 1, idx));
+
+      const cx = curPts[idx].x, cy = curPts[idx].y;
+      hl.setAttribute("x1", cx); hl.setAttribute("x2", cx); hl.setAttribute("opacity", "1");
+      hd.setAttribute("cx", cx); hd.setAttribute("cy", cy); hd.setAttribute("opacity", "1");
+
+      const diff = LINE.cur[idx] - LINE.prev[idx];
+      const sign = diff >= 0 ? "+" : "";
+      tip.innerHTML = `
+        <div class="t-d">${LINE.labels[idx]} · 订单数</div>
+        <div class="t-r"><i style="background:#7aa2ff"></i><span>本期</span><b>${LINE.cur[idx]}</b></div>
+        <div class="t-r"><i style="background:#5f708a"></i><span>上周</span><b>${LINE.prev[idx]}</b></div>
+        <div class="t-r" style="margin-top:4px;padding-top:4px;border-top:1px solid #22303f">
+          <span style="color:${diff >= 0 ? "#5eead4" : "#fda4af"}">同比</span>
+          <b style="color:${diff >= 0 ? "#5eead4" : "#fda4af"}">${sign}${diff}</b>
+        </div>`;
+
+      const wr = wrap.getBoundingClientRect();
+      const left = Math.min(Math.max((r.left - wr.left) + (cx / W) * r.width, 64), wr.width - 64);
+      const top = (r.top - wr.top) + (cy / H) * r.height;
+      tip.style.left = left + "px";
+      tip.style.top = top + "px";
+      tip.classList.add("on");
+    }
+
+    function leave(){
+      tip.classList.remove("on");
+      hl.setAttribute("opacity", "0");
+      hd.setAttribute("opacity", "0");
+    }
+
+    svg.querySelector("#hitArea").addEventListener("mousemove", move);
+    svg.addEventListener("mouseleave", leave);
+  }
+
+  drawLine();
+
+  let rzTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(rzTimer);
+    rzTimer = setTimeout(drawLine, 160);
+  });
+
+  /* ========== 3. 环形图 ========== */
+  const CATS = [
+    { name: "数码配件", v: 32, color: "#5b8cff" },
+    { name: "手机",     v: 26, color: "#2dd4bf" },
+    { name: "电脑",     v: 21, color: "#a78bfa" },
+    { name: "智能家居", v: 13, color: "#fbbf24" },
+    { name: "其他",     v: 8,  color: "#64748b" }
+  ];
+  const TOTAL_ORDERS = LINE.cur.reduce((a, b) => a + b, 0);
+  const CX = 110, CY = 110, RING_R = 74, RING_W = 26, GAP_DEG = 2.2;
+
+  const pt = (deg, r) => {
+    const a = (deg - 90) * Math.PI / 180;
+    return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+  };
+  function arcPath(a1, a2, r){
+    const s = pt(a1, r), e = pt(a2, r);
+    const large = (a2 - a1) > 180 ? 1 : 0;
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+  }
+
+  function drawDonut(){
+    const svg = document.getElementById("donut");
+    let acc = 0;
+    const segs = CATS.map((c, i) => {
+      const span = c.v * 3.6;
+      const g = span > 10 ? GAP_DEG : 0;
+      const a1 = acc + g / 2;
+      const a2 = acc + span - g / 2;
+      acc += span;
+      return `<path class="seg-path" data-i="${i}" d="${arcPath(a1, a2, RING_R)}"
+        fill="none" stroke="${c.color}" stroke-width="${RING_W}" stroke-linecap="round"/>`;
+    }).join("");
+
+    svg.innerHTML = `
+      <circle cx="${CX}" cy="${CY}" r="${RING_R}" fill="none" stroke="#17202e" stroke-width="${RING_W}"/>
+      <g id="segs">${segs}</g>
+    `;
+
+    // 图例
+    const list = document.getElementById("catList");
+    list.innerHTML = CATS.map((c, i) => `
+      <div class="cat" data-i="${i}">
+        <i style="background:${c.color};box-shadow:0 0 8px ${c.color}66"></i>
+        <span class="n">${c.name}</span>
+        <span class="v">${c.v}<small>%</small></span>
+      </div>`).join("");
+
+    const wrap = document.getElementById("donutWrap");
+    const dv = document.getElementById("donutVal");
+    const dl = document.getElementById("donutLbl");
+
+    function activate(i){
+      wrap.classList.add("dim");
+      svg.querySelectorAll(".seg-path").forEach(s => s.classList.toggle("on", +s.dataset.i === i));
+      list.querySelectorAll(".cat").forEach(s => s.classList.toggle("on", +s.dataset.i === i));
+      dv.textContent = CATS[i].v + "%";
+      dl.textContent = CATS[i].name;
+      svg.querySelectorAll(".seg-path").forEach(s => {
+        if (+s.dataset.i === i) s.setAttribute("stroke-width", RING_W + 6);
+        else s.setAttribute("stroke-width", RING_W);
+      });
+    }
+    function reset(){
+      wrap.classList.remove("dim");
+      svg.querySelectorAll(".seg-path").forEach(s => { s.classList.remove("on"); s.setAttribute("stroke-width", RING_W); });
+      list.querySelectorAll(".cat").forEach(s => s.classList.remove("on"));
+      dv.textContent = TOTAL_ORDERS.toLocaleString("en-US");
+      dl.textContent = "近 7 天订单";
+    }
+
+    svg.querySelectorAll(".seg-path").forEach(s => {
+      s.addEventListener("mouseenter", () => activate(+s.dataset.i));
+      s.addEventListener("mouseleave", reset);
+    });
+    list.querySelectorAll(".cat").forEach(s => {
+      s.addEventListener("mouseenter", () => activate(+s.dataset.i));
+      s.addEventListener("mouseleave", reset);
+    });
+  }
+  drawDonut();
+
+  /* ========== 4. 表格 ========== */
+  const ORDERS = [
+    ["ORD-2841","陈雅琪","MacBook Pro 14 寸","电脑",17999,"已完成","2026-10-22 14:32"],
+    ["ORD-2840","刘启明","iPhone 16 Pro","手机",8599,"已完成","2026-10-22 13:18"],
+    ["ORD-2839","王思雨","AirPods Pro 3","数码配件",1799,"处理中","2026-10-22 12:05"],
+    ["ORD-2838","张宇航","iPad Air 11 寸","电脑",5799,"已完成","2026-10-22 11:47"],
+    ["ORD-2837","李思涵","Apple Watch Ultra 2","数码配件",6499,"已取消","2026-10-22 10:26"],
+    ["ORD-2836","吴俊杰","妙控键盘","数码配件",2499,"处理中","2026-10-22 09:54"],
+    ["ORD-2835","胡依林","Studio Display 显示器","电脑",11499,"已完成","2026-10-22 09:12"],
+    ["ORD-2834","徐浩然","HomePod 2 智能音箱","智能家居",2199,"已完成","2026-10-21 22:40"],
+    ["ORD-2833","赵以宁","iPhone 16","手机",5999,"已完成","2026-10-21 21:05"],
+    ["ORD-2832","孙可盈","智能门锁 Pro","智能家居",1899,"待发货","2026-10-21 20:31"],
+    ["ORD-2831","周予安","MacBook Air 13 寸","电脑",9499,"已完成","2026-10-21 19:02"],
+    ["ORD-2830","郑亦然","AirPods Max","数码配件",3999,"处理中","2026-10-21 17:48"],
+    ["ORD-2829","冯知微","扫地机器人 S8","智能家居",3299,"已完成","2026-10-21 16:22"],
+    ["ORD-2828","陈牧之","iPhone 16 Pro Max","手机",9999,"已完成","2026-10-21 15:10"],
+    ["ORD-2827","许清欢","显示器支架","其他",599,"待发货","2026-10-21 13:55"],
+    ["ORD-2826","林望舒","小米智能音箱","智能家居",349,"已取消","2026-10-21 12:19"],
+    ["ORD-2825","何书言","iPad mini","电脑",3999,"已完成","2026-10-21 11:03"],
+    ["ORD-2824","罗嘉言","Vision Pro","其他",27999,"处理中","2026-10-20 21:44"],
+    ["ORD-2823","唐芷若","无线充电器","数码配件",429,"已完成","2026-10-20 20:12"],
+    ["ORD-2822","韩沐辰","iPhone 15","手机",4599,"已完成","2026-10-20 18:36"],
+    ["ORD-2821","曹予墨","智能台灯","智能家居",699,"待发货","2026-10-20 16:58"],
+    ["ORD-2820","邓清川","Mac Studio","电脑",16499,"已完成","2026-10-20 15:21"],
+    ["ORD-2819","袁诗雨","蓝牙耳机","数码配件",899,"已取消","2026-10-20 13:47"],
+    ["ORD-2818","蒋言蹊","机械键盘","其他",1099,"已完成","2026-10-20 11:30"],
+    ["ORD-2817","沈亦舟","iPhone 16 Plus","手机",6999,"已完成","2026-10-19 22:15"],
+    ["ORD-2816","顾南乔","空气净化器","智能家居",1599,"处理中","2026-10-19 20:03"],
+    ["ORD-2815","谢云舟","MacBook Pro 16 寸","电脑",25999,"已完成","2026-10-19 18:44"],
+    ["ORD-2814","白之初","数据线套装","数码配件",129,"待发货","2026-10-19 17:26"]
+  ].map(r => ({
+    id: r[0], customer: r[1], product: r[2], cat: r[3],
+    amount: r[4], status: r[5], tsStr: r[6],
+    ts: new Date(r[6].replace(" ", "T")).getTime()
+  }));
+
+  const STATUS_CLASS = { "已完成": "s-done", "处理中": "s-proc", "待发货": "s-ship", "已取消": "s-cancel" };
+  const PER_PAGE = 8;
+
+  const state = { q: "", page: 1, key: "id", dir: "desc" };
+
+  const tbody = document.getElementById("tbody");
+  const pageInfo = document.getElementById("pageInfo");
+  const pagesEl = document.getElementById("pages");
+  const countBox = document.getElementById("countBox");
+  const searchInput = document.getElementById("search");
+  const field = document.getElementById("field");
+  const clearBtn = document.getElementById("clearBtn");
+
+  const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+
+  function filtered(){
+    const q = state.q.trim().toLowerCase();
+    let rows = ORDERS;
+    if (q){
+      rows = ORDERS.filter(o =>
+        o.id.toLowerCase().includes(q) ||
+        o.customer.includes(q) ||
+        o.product.toLowerCase().includes(q) ||
+        o.cat.includes(q)
+      );
+    }
+    const key = state.key, dir = state.dir === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      let va = a[key], vb = b[key];
+      if (typeof va === "string") return va.localeCompare(vb, "zh-CN") * dir;
+      return (va - vb) * dir;
+    });
+  }
+
+  function render(){
+    const rows = filtered();
+    const total = rows.length;
+    const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+    if (state.page > pages) state.page = pages;
+    const start = (state.page - 1) * PER_PAGE;
+    const slice = rows.slice(start, start + PER_PAGE);
+
+    // 表体
+    if (!slice.length){
+      tbody.innerHTML = `<tr><td colspan="7" class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6M8.5 11h5"/></svg>
+        <div>没有找到匹配「${esc(state.q)}」的订单</div>
+      </td></tr>`;
+    } else {
+      tbody.innerHTML = slice.map(o => `
+        <tr>
+          <td><span class="oid">${o.id}</span></td>
+          <td><span class="cust"><span class="mini-av">${esc(o.customer.slice(0, 1))}</span>${esc(o.customer)}</span></td>
+          <td><span class="prod">${esc(o.product)}</span></td>
+          <td><span class="cat-tag">${esc(o.cat)}</span></td>
+          <td class="amt num">¥${o.amount.toLocaleString("en-US")}</td>
+          <td><span class="badge ${STATUS_CLASS[o.status]}">${o.status}</span></td>
+          <td class="ta-r" style="text-align:right"><span class="time">${o.tsStr}</span></td>
+        </tr>`).join("");
+    }
+
+    // 计数
+    countBox.innerHTML = state.q
+      ? `匹配 <b>${total}</b> 条 / 共 ${ORDERS.length} 条`
+      : `共 <b>${ORDERS.length}</b> 条订单`;
+
+    // 分页信息
+    pageInfo.innerHTML = total
+      ? `显示第 <b>${start + 1}</b>–<b>${Math.min(start + PER_PAGE, total)}</b> 条，共 <b>${total}</b> 条`
+      : `共 <b>0</b> 条`;
+
+    // 页码
+    const nums = pageNumbers(state.page, pages);
+    let html = `<button class="pg" data-p="${state.page - 1}" ${state.page === 1 ? "disabled" : ""} aria-label="上一页">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>`;
+    nums.forEach(n => {
+      if (n === "…") html += `<span class="pg dots">…</span>`;
+      else html += `<button class="pg ${n === state.page ? "active" : ""}" data-p="${n}">${n}</button>`;
+    });
+    html += `<button class="pg" data-p="${state.page + 1}" ${state.page === pages ? "disabled" : ""} aria-label="下一页">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>`;
+    pagesEl.innerHTML = html;
+  }
+
+  function pageNumbers(cur, total){
+    const out = [];
+    if (total <= 7){
+      for (let i = 1; i <= total; i++) out.push(i);
+      return out;
+    }
+    out.push(1);
+    const s = Math.max(2, cur - 1), e = Math.min(total - 1, cur + 1);
+    if (s > 2) out.push("…");
+    for (let i = s; i <= e; i++) out.push(i);
+    if (e < total - 1) out.push("…");
+    out.push(total);
+    return out;
+  }
+
+  // 排序
+  document.querySelectorAll("th[data-key]").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      if (state.key === key){
+        state.dir = state.dir === "asc" ? "desc" : "asc";
+      } else {
+        state.key = key;
+        state.dir = (key === "amount" || key === "ts") ? "desc" : "asc";
+      }
+      document.querySelectorAll("th[data-key]").forEach(t => {
+        t.classList.remove("sorted");
+        const a = t.querySelector(".arrow");
+        if (a) a.classList.remove("flip");
+      });
+      th.classList.add("sorted");
+      const arrow = th.querySelector(".arrow");
+      if (arrow && state.dir === "asc") arrow.classList.add("flip");
+      state.page = 1;
+      render();
+    });
+  });
+
+  // 搜索
+  searchInput.addEventListener("input", e => {
+    state.q = e.target.value;
+    state.page = 1;
+    field.classList.toggle("has-val", !!state.q);
+    render();
+  });
+  clearBtn.addEventListener("click", () => {
+    searchInput.value = "";
+    state.q = "";
+    state.page = 1;
+    field.classList.remove("has-val");
+    searchInput.focus();
+    render();
+  });
+
+  // 分页
+  pagesEl.addEventListener("click", e => {
+    const btn = e.target.closest(".pg[data-p]");
+    if (!btn || btn.disabled) return;
+    const p = parseInt(btn.dataset.p, 10);
+    const pages = Math.max(1, Math.ceil(filtered().length / PER_PAGE));
+    if (p < 1 || p > pages) return;
+    state.page = p;
+    render();
+  });
+
+  render();
+
+  /* ========== 5. 交互杂项 ========== */
+  const sidebar = document.getElementById("sidebar");
+  const scrim = document.getElementById("scrim");
+  document.getElementById("menuBtn").addEventListener("click", () => {
+    sidebar.classList.add("open");
+    scrim.classList.add("on");
+  });
+  scrim.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    scrim.classList.remove("on");
+  });
+
+  document.querySelectorAll(".segment button").forEach(b => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".segment button").forEach(x => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+    });
+  });
+
+  document.querySelector(".nav")?.addEventListener("click", e => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    e.preventDefault();
+    document.querySelectorAll(".nav a").forEach(x => x.classList.remove("active"));
+    a.classList.add("active");
+    if (window.innerWidth <= 1040){
+      sidebar.classList.remove("open");
+      scrim.classList.remove("on");
+    }
+  });
+
+  // 刷新
+  const refreshBtn = document.getElementById("refreshBtn");
+  const stamp = document.getElementById("stamp");
+  refreshBtn.addEventListener("click", () => {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    stamp.textContent = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    const icon = refreshBtn.querySelector("svg");
+    icon.animate(
+      [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+      { duration: 620, easing: "cubic-bezier(.4,0,.2,1)" }
+    );
+    document.querySelectorAll(".kpi [data-target]").forEach(countUp);
+  });
+})();
+</script>
+</body>
+</html>

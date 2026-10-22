@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 工作区内部数据（不随仓库分发）
+.workbuddy/
+
+# 本地临时文件
+_preview.html
+_h.html
+_shot.html
+_*.png
